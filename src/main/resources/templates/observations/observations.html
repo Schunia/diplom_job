@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity5">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Наблюдения</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css"
+        rel="stylesheet" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65"
+        crossorigin="anonymous">
+
+  <link rel="icon" type="image/x-icon" href="/assets/brand/logo.png"/>
+  <!-- Font Awesome icons (free version)-->
+  <script src="https://use.fontawesome.com/releases/v6.3.0/js/all.js" crossorigin="anonymous"></script>
+  <!-- Google fonts-->
+  <link href="https://fonts.googleapis.com/css?family=Varela+Round" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i"
+        rel="stylesheet"/>
+  <!-- Core theme CSS (includes Bootstrap)-->
+  <link href="../assets/dist/css/styles.css" rel="stylesheet"/>
+  <!-- FancyBox Для изображений-->
+  <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/gh/fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css"/>
+</head>
+
+<body>
+<div th:replace="~{fragments/navigation :: navigation}"></div>
+
+<div class="container mt-4">
+  <div class="row justify-content-between">
+    <h1 class="col-sm-4">Наблюдения</h1>
+    <a sec:authorize="isAuthenticated()" href="/observations/create" class="col-sm-3 btn-lg btn btn-outline-dark">Добавить</a>
+  </div>
+
+  <hr class="my-4">
+
+  <div class="row justify-content-between">
+    <div class="col-7">
+      <form th:action="@{/observations}" th:id="searchForm">
+        <div class="col-12 mb-4">
+          <div class="input-group">
+            <span class="input-group-text" id="basic-addon1"><i class="fa fa-search"></i></span>
+            <input id="keyword" type="search" name="keyword" th:value="${keyword}" class="form-control"
+                   placeholder="Поиск..." aria-label="Поиск" aria-describedby="basic-addon1">
+            <button class="btn btn-info btn-sm" type="submit" id="button-addon1">Найти</button>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-xl-5 col-lg-12 col-md-12 col-sm-12">
+            <div class="input-group">
+              <label class="input-group-text" for="pageSize">Категория:</label>
+
+              <select th:form="searchForm" name="filter" th:value="${filter}" onchange="changeFilter()"
+                      class="form-select" id="filter">
+                <option th:each="category : ${categories}" th:value="${category}" th:text="${category}"
+                        th:selected="${category == filter}"></option>
+              </select>
+            </div>
+          </div>
+
+<!--          <div class="col-xl-5 col-lg-12 col-md-12 col-sm-12">-->
+<!--            <div class="input-group">-->
+<!--              <label class="input-group-text" for="pageSize">Кол-во элементов:</label>-->
+
+<!--              <select th:form="searchForm" name="size" th:value="${pageSize}" onchange="changePageSize()"-->
+<!--                      class="form-select" id="pageSize">-->
+<!--                <option th:each="s : ${ {3, 6, 9, 12, 15} }" th:value="${s}" th:text="${s}"-->
+<!--                        th:selected="${s == pageSize}"></option>-->
+<!--              </select>-->
+<!--            </div>-->
+<!--          </div>-->
+
+          <div class="col-xl-2 col-lg-12 col-md-12 col-sm-12 d-flex justify-content-end">
+            <a id="btnClear" th:href="@{/observations}" class="btn btn-info btn-sm">Очистить</a>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <div class="col-5">
+      <div class="row justify-content-between mb-4">
+        <div class="input-group" role="group" aria-label="Small button group">
+          <label class="input-group-text">Сортировать по:</label>
+          <a th:href="@{'/observations?' + ${keyword!=null && keyword!=''? 'keyword=' + keyword + '&' : ''} +
+                'page=' + ${currentPage} + '&size=' + ${pageSize} + '&sortField=title&sortDir=' + ${reverseSortDir} + '&scheme=' + ${scheme}}"
+             class="btn btn-sm btn-outline-dark">
+            <span class="h6" th:if="${sortField} == 'object'">Названию</span>
+            <span class="h6" style="text-transform: capitalize;" th:unless="${sortField} == 'object'"><small>Названию</small></span>
+            <span th:if="${sortDir} == 'asc' and ${sortField} == 'object'">&#9650;</span>
+            <span th:if="${sortDir} == 'desc' and ${sortField} == 'object'">&#9660;</span>
+          </a>
+          <a th:href="@{'/observations?' + ${keyword!=null && keyword!=''? 'keyword=' + keyword + '&' : ''} +
+                'page=' + ${currentPage} + '&size=' + ${pageSize} + '&sortField=category&sortDir=' + ${reverseSortDir} + '&scheme=' + ${scheme}}"
+             class="btn btn-sm btn-outline-dark">
+            <span class="h6" th:if="${sortField} == 'place'">Месту</span>
+            <span class="h6" style="text-transform: capitalize;"
+                  th:unless="${sortField} == 'place'"><small>Месту</small></span>
+            <span th:if="${sortDir} == 'asc' and ${sortField} == 'place'">&#9650;</span>
+            <span th:if="${sortDir} == 'desc' and ${sortField} == 'place'">&#9660;</span>
+          </a>
+          <a th:href="@{'/observations?' + ${keyword!=null && keyword!=''? 'keyword=' + keyword + '&' : ''} +
+                'page=' + ${currentPage} + '&size=' + ${pageSize} + '&sortField=category&sortDir=' + ${reverseSortDir} + '&scheme=' + ${scheme}}"
+             class="btn btn-sm btn-outline-dark">
+            <span class="h6" th:if="${sortField} == 'date'">Времени</span>
+            <span class="h6" style="text-transform: capitalize;"
+                  th:unless="${sortField} == 'date'"><small>Времени</small></span>
+            <span th:if="${sortDir} == 'asc' and ${sortField} == 'date'">&#9650;</span>
+            <span th:if="${sortDir} == 'desc' and ${sortField} == 'date'">&#9660;</span>
+          </a>
+          <a sec:authorize="hasRole('ROLE_ADMIN')"
+                  th:href="@{'/observations?' + ${keyword!=null && keyword!=''? 'keyword=' + keyword + '&' : ''} +
+                'page=' + ${currentPage} + '&size=' + ${pageSize} + '&sortField=category&sortDir=' + ${reverseSortDir} + '&scheme=' + ${scheme}}"
+             class="btn btn-sm btn-outline-dark">
+            <span class="h6" th:if="${sortField} == 'status'">Статусу</span>
+            <span class="h6" style="text-transform: capitalize;"
+                  th:unless="${sortField} == 'status'"><small>Статусу</small></span>
+            <span th:if="${sortDir} == 'asc' and ${sortField} == 'status'">&#9650;</span>
+            <span th:if="${sortDir} == 'desc' and ${sortField} == 'status'">&#9660;</span>
+          </a>
+        </div>
+      </div>
+      <!--        Смена режима отображения наблюдений-->
+      <div class="row justify-content-between">
+        <div class="input-group" role="group" aria-label="Basic radio toggle button group">
+          <label class="input-group-text">Отобразить:</label>
+          <input type="radio" class="btn-check" name="btnradio" id="btnRadioTableOn" autocomplete="off"
+                 th:if="${scheme} == 'card'" checked>
+          <a th:href="@{'/observations?' + ${keyword!=null && keyword!=''? 'keyword=' + keyword + '&' : ''} +
+                'page=' + ${currentPage} + '&size=' + ${pageSize} + '&sortField=' + ${sortField} + '&sortDir=' + ${sortDir} + '&scheme=card'}"
+             th:if="${scheme} == 'card'" style="text-transform: capitalize;"
+             class="btn btn-sm btn-outline-dark"
+             for="btnRadioTableOn"><span class="h6"><small>Карточки</small></span></a>
+
+          <input type="radio" class="btn-check" name="btnradio" id="btnRadioTable" autocomplete="off"
+                 th:unless="${scheme} == 'card'">
+          <a th:href="@{'/observations?' + ${keyword!=null && keyword!=''? 'keyword=' + keyword + '&' : ''} +
+                'page=' + ${currentPage} + '&size=' + ${pageSize} + '&sortField=' + ${sortField} + '&sortDir=' + ${sortDir} + '&scheme=card'}"
+             th:unless="${scheme} == 'card'" style="text-transform: capitalize;"
+             class="btn btn-sm btn-outline-dark" for="btnRadioTable"><span class="h6"><small>Карточки</small></span></a>
+
+          <input type="radio" class="btn-check" name="btnradio" id="btnRadioListOn" autocomplete="off"
+                 th:if="${scheme} == 'list'" checked>
+          <a th:href="@{'/observations?' + ${keyword!=null && keyword!=''? 'keyword=' + keyword + '&' : ''} +
+                'page=' + ${currentPage} + '&size=' + ${pageSize} + '&sortField=' + ${sortField} + '&sortDir=' + ${sortDir} + '&scheme=list'}"
+             th:if="${scheme} == 'list'" style="text-transform: capitalize;"
+             class="btn btn-sm btn-outline-dark"
+             for="btnRadioListOn"><span class="h6"><small>Список</small></span></a>
+
+          <input type="radio" class="btn-check" name="btnradio" id="btnRadioList" autocomplete="off"
+                 th:unless="${scheme} == 'list'">
+          <a th:href="@{'/observations?' + ${keyword!=null && keyword!=''? 'keyword=' + keyword + '&' : ''} +
+                'page=' + ${currentPage} + '&size=' + ${pageSize} + '&sortField=' + ${sortField} + '&sortDir=' + ${sortDir} + '&scheme=list'}"
+             th:unless="${scheme} == 'list'" style="text-transform: capitalize;"
+             class="btn btn-sm btn-outline-dark" for="btnRadioList"><span
+                  class="h6"><small>Список</small></span></a>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!------------------------------------------------------------------------------------>
+  <!--    Панель поиска и количества отображения элементов-->
+  <!------------------------------------------------------------------------------------>
+
+  <div class="my-3">
+
+  </div>
+
+  <hr class="my-4">
+
+  <span th:if="${observations.size() == 0}">Список наблюдений пуст</span>
+
+  <!------------------------------------------------------------------------------------>
+  <!--    Отображение наблюдений таблицей-->
+  <!------------------------------------------------------------------------------------>
+
+  <table th:if="${observations.size() > 0} and ${scheme} == 'table'" class="table table-hover">
+    <thead class="thead-dark">
+    <tr>
+      <td>ID</td>
+      <td>Название</td>
+      <td>Категория</td>
+      <td>Место</td>
+      <td></td>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="observation : ${observations}">
+      <td th:text="${observation.id}"/>
+      <td th:text="${observation.object}"/>
+      <td th:text="${observation.category.title}"/>
+      <td th:text="${observation.place}"/>
+      <!--            <td><img src="/assets/static/photos/guides/${guide.pathPhoto}.jpg"></td>-->
+      <td class="align-self-end"><a type="button" class="btn btn-secondary"
+                                    th:href="@{'/observations/details/' + ${observation.id}}">Подробнее</a>
+        <a type="button" class="btn btn-secondary"
+           th:href="@{'/observations/edit/' + ${observation.id}}">Редактировать</a>
+        <a type="button" class="btn btn-danger"
+           th:href="@{'/observations/delete/' + ${observation.id}}">Удалить</a></td>
+    </tr>
+    </tbody>
+  </table>
+
+  <!------------------------------------------------------------------------------------>
+  <!--    Отображение наблюдений карточками-->
+  <!------------------------------------------------------------------------------------>
+
+  <div class="row row-cols-1 row-cols-md-2 row-cols-lg-2 row-cols-xl-3 g-4" th:if="${observations.size() > 0}  and ${scheme} == 'card'">
+    <div class="col" th:each="observation : ${observations}">
+      <div class="card h-100 rounded-4">
+        <img th:src="|data:image/jpeg;base64,${observation.observationPhotos[0].pathPhoto}|" class="card-img-top rounded-4"
+             style="object-fit: cover; height: 280px; margin-bottom: -12px;" alt="...">
+
+        <div class="card-body">
+          <h5 class="title pb-1 pt-3" th:text="${observation.object}"></h5>
+          <h6>
+            <span class="badge bg-info" th:text="${observation.category.title}"></span>
+            <span class="lm-1 badge bg-warning" th:text="${observation.status.title}"></span>
+          </h6>
+        </div>
+        <div class="card-body">
+          <p class="text-truncate" style="-webkit-line-clamp: 3; display: -webkit-box;
+                        -webkit-box-orient: vertical; overflow: hidden; white-space: inherit;"
+             th:text="${observation.note}"></p>
+        </div>
+
+        <!----------    Действия для админа    ----------------------------------------------->
+        <div class="card-footer p-0" sec:authorize="hasRole('ROLE_ADMIN')"
+             style="border-top-left-radius: 16px; border-top-right-radius: 16px;">
+          <div class="btn-group w-100" role="group" aria-label="Buttons for Moderator">
+            <a type="button" class="btn btn-primary w-100" th:href="@{'/observations/edit/' + ${observation.id}}"
+               style="border-top-left-radius: 16px; border-bottom-left-radius: 0px;">Редактировать</a>
+            <!--                        <a type="button" class="btn btn-danger w-100" th:href="@{'/places/delete/' + ${mark.id}}"-->
+            <!--                           style="border-top-right-radius: 16px; border-bottom-right-radius: 0px;">Удалить</a>-->
+
+            <!-- Кнопка-триггер модального окна -->
+            <button type="button" class="btn btn-danger w-100" data-bs-toggle="modal"
+                    style="border-top-right-radius: 16px; border-bottom-right-radius: 0px;"
+                    th:data-bs-target="'#deleteObservModal' + ${observation.id}">Удалить
+            </button>
+
+            <!-- Модальное окно удаление-->
+            <div class="modal fade" th:id="'deleteObservModal' + ${observation.id}" tabindex="-1" aria-labelledby="deleteObservModalLabel"
+                 aria-hidden="true">
+              <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content rounded-4">
+                  <div class="modal-header">
+                    <h5 class="modal-title">Удаление наблюдения</h5>
+                  </div>
+                  <div class="modal-body">
+                    <h5 class="modal-title">Вы уверены, что хотите удалить наблюдение: <span th:text="${observation.object}"></span>?</h5>
+                  </div>
+                  <div class="modal-footer p-0"
+                       style="border-bottom-left-radius: 16px; border-bottom-right-radius: 16px;">
+
+                    <div class="btn-group w-100 m-0" role="group">
+                      <button type="button" class="btn btn-outline-dark" data-bs-dismiss="modal"
+                              style="border-bottom-left-radius: 12px; border-top-left-radius: 0px;">
+                        Закрыть
+                      </button>
+
+                      <a type="button" th:href="@{'/observations/delete/' + ${observation.id}}" class="btn btn-outline-danger"
+                         style="border-bottom-right-radius: 12px; border-top-right-radius: 0px;">
+                        Удалить
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!----------    Действия для пользователя    ----------------------------------->
+        <div class="card-footer p-0"
+             style="border-bottom-left-radius: 16px; border-bottom-right-radius: 16px;">
+
+          <button class="btn btn-primary w-100" type="button" data-bs-toggle="offcanvas"
+                  th:data-bs-target="'#offcanvasObserv' + ${observation.id}"
+                  aria-controls="offcanvasResponsive"
+                  style="border-bottom-left-radius: 16px; border-top-left-radius: 0px; border-bottom-right-radius: 16px; border-top-right-radius: 0px;">Подробнее
+          </button>
+        </div>
+      </div>
+
+      <!-----------Канвас---------->
+      <div class="container-fluid">
+        <div class="offcanvas offcanvas-size-xl offcanvas-end" tabindex="-1"
+             th:id="'offcanvasObserv' + ${observation.id}" aria-labelledby="offcanvasResponsiveLabel">
+          <div class="offcanvas-body" th:id="places-offcanvas">
+            <button type="button" class="btn-close btn-close-white m-5 p-2"
+                    style="position: absolute; z-index: 2;" data-bs-dismiss="offcanvas"
+                    aria-label="Закрыть"></button>
+            <!-------------------------Карусель-------------------------->
+            <div th:id="'carouselPlaceIndicators' + ${observation.id}"
+                 class="carousel slide carousel-fade" data-bs-ride="carousel">
+              <div class="carousel-indicators" style="padding-bottom: 48px;">
+                <button type="button" th:each="photo : ${observation.observationPhotos}"
+                        th:classappend="${photoStat.first} ? active : ''"
+                        th:data-bs-target="'#carouselPlaceIndicators' + ${observation.id}"
+                        th:data-bs-slide-to="${photoStat.index}" aria-label="Slide"></button>
+              </div>
+              <div class="carousel-inner">
+                <div class="carousel-item" th:each="photo : ${observation.observationPhotos}"
+                     th:classappend="${photoStat.first} ? active : ''">
+                  <a th:href="|data:image/jpeg;base64,${photo.pathPhoto}|"
+                     th:data-fancybox="'gallery' + ${observation.id}">
+                    <img th:src="|data:image/jpeg;base64,${photo.pathPhoto}|" class="d-block w-100"
+                         style="object-fit: cover;"
+                         height="600px" alt="Фотография наблюдения">
+                  </a>
+                </div>
+              </div>
+              <button class="carousel-control-prev" type="button"
+                      th:data-bs-target="'#carouselPlaceIndicators' + ${observation.id}"
+                      data-bs-slide="prev">
+                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Previous</span>
+              </button>
+              <button class="carousel-control-next" type="button"
+                      th:data-bs-target="'#carouselPlaceIndicators' + ${observation.id}"
+                      data-bs-slide="next">
+                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Next</span>
+              </button>
+            </div>
+
+            <div th:id="placeOffcanvasContainer" class="bg-light text-center pb-4">
+              <!-------------------------Категория------------------------->
+              <h3 style="margin-top: -20px;position: absolute;left: 0;right: 0;text-align: center;">
+                <span class="badge bg-warning rounded-5" th:text="${observation.category.title}"></span></h3>
+
+              <ul class="navbar-nav justify-content-end flex-grow-1 pe-5 ps-5">
+                <!-------------------------Название-------------------------->
+                <li class="nav-item">
+                  <h2 class="pt-4 pb-4" style="margin-bottom: 0px;" th:text="${observation.object}"></h2>
+                </li>
+                <!-------------------------Описание-------------------------->
+                <li class="nav-item">
+                  <div class="card text-bg-light w-100 mb-3 rounded-4">
+                    <div class="card-body">
+                      <p class="card-text"
+                         th:text="${observation.note}"></p>
+                    </div>
+                  </div>
+                </li>
+                <!-------------------------Расписание------------------------>
+                <li class="nav-item">
+                  <div class="accordion accordion-flush" id="accordionFlushSchedule"
+                       style="--bs-accordion-bg: rgba(255, 255, 255, 0);">
+                    <div class="accordion-item">
+                      <h2 class="accordion-header" id="flush-headingOne">
+                        <button class="accordion-button collapsed" type="button"
+                                data-bs-toggle="collapse" data-bs-target="#flush-collapseOne"
+                                aria-expanded="false" aria-controls="flush-collapseOne">
+                          Доп.Информация
+                        </button>
+                      </h2>
+                      <div id="flush-collapseOne" class="accordion-collapse collapse"
+                           aria-labelledby="flush-headingOne"
+                           data-bs-parent="#accordionFlushSchedule">
+                        <div class="accordion-body">
+                            <div class="row d-flex align-items-end">
+
+                              <div class="card text-bg-light w-100 mb-3 rounded-4">
+                                <div class="card-body">
+                                  <h5 class="card-text">
+                                    Произошло:</h5>
+                                  <p class="card-text"
+                                     th:text="${observation.date}"></p>
+                                  <p class="card-text"
+                                     th:text="${observation.place}"></p>
+                                </div>
+                              </div>
+
+                              <div class="card text-bg-light w-100 mb-3 rounded-4">
+                                <div class="card-body">
+                                  <h5 class="card-text">
+                                    Коментарий администратора</h5>
+                                  <p class="card-text"
+                                     th:text="${observation.comment}"></p>
+                                </div>
+                              </div>
+
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                </li>
+
+              </ul>
+            </div>
+
+
+          </div>
+        </div>
+      </div>
+      <!-------------------Конец канваса------------------>
+
+    </div>
+  </div>
+
+  <!------------------------------------------------------------------------------------>
+  <!--    Отображение списком-->
+  <!------------------------------------------------------------------------------------>
+
+  <div th:if="${observations.size() > 0}  and ${scheme} == 'list'" th:each="observation : ${observations}">
+    <div class="row featurette">
+      <div class="col-md-8 order-md-2">
+                <span class="badge rounded-pill text-bg-success" style="margin-bottom: 1em;"
+                      th:text="${observation.category.title}"></span>
+
+        <div class="row">
+          <h2 class="featurette-heading fw-normal lh-1 col-md-9 col-lg-10" th:text="${observation.object}"></h2>
+
+        </div>
+
+        <p class="lead" th:text="${observation.place}"></p>
+
+
+        <!----------    Действия для админа    ----------------------------------------------->
+        <div class="btn-group" role="group" aria-label="Buttons for Admin"
+             sec:authorize="hasRole('ROLE_ADMIN')">
+          <button class="btn btn-primary" type="button" data-bs-toggle="offcanvas"
+                  th:data-bs-target="'#offcanvasPlace' + ${observation.id}"
+                  aria-controls="offcanvasResponsive">
+            Подробнее
+          </button>
+          <a type="button" class="btn btn-secondary"
+             th:href="@{'/observations/edit/' + ${observation.id}}">Редактировать</a>
+
+          <!-- Модальное окно удаления-->
+          <div class="modal fade" th:id="'deleteObservationModal' + ${observation.id}" tabindex="-1" aria-labelledby="deleteObservationModalLabel"
+               aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+              <div class="modal-content rounded-4">
+                <div class="modal-header">
+                  <h5 class="modal-title">Удаление наблюдения</h5>
+                </div>
+                <div class="modal-body">
+                  <h5 class="modal-title">Вы уверены, что хотите удалить наблюдение: <span th:text="${observation.object}"></span>?</h5>
+                </div>
+                <div class="modal-footer p-0"
+                     style="border-bottom-left-radius: 16px; border-bottom-right-radius: 16px;">
+
+                  <div class="btn-group w-100 m-0" role="group">
+                    <button type="button" class="btn btn-outline-dark" data-bs-dismiss="modal"
+                            style="border-bottom-left-radius: 12px; border-top-left-radius: 0px;">Закрыть</button>
+
+                    <a type="button" th:href="@{'/observations/delete/' + ${observation.id}}" class="btn btn-outline-danger"
+                       style="border-bottom-right-radius: 12px; border-top-right-radius: 0px;">Удалить</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Кнопка-триггер модального окна -->
+          <button type="button" class="btn btn-danger" data-bs-toggle="modal"
+                  th:data-bs-target="'#deleteObservationModal' + ${observation.id}">Удалить
+          </button>
+        </div>
+        <!----------    Действия для незарег.пользователя    ------------------------------------->
+        <button sec:authorize="!hasRole('ROLE_ADMIN')" class="btn btn-primary" type="button" data-bs-toggle="offcanvas"
+                th:data-bs-target="'#offcanvasObservation' + ${observation.id}"
+                aria-controls="offcanvasResponsive">
+          Подробнее
+        </button>
+      </div>
+
+      <div class="col-md-4 order-md-1">
+        <img class="bd-placeholder-img bd-placeholder-img-lg featurette-image img-fluid mx-auto rounded-4"
+             width="500"
+             height="500" th:src="|data:image/jpeg;base64,${observation.observationPhotos[0].pathPhoto}|" role="img"
+             aria-label="Placeholder: 500x500"
+             preserveAspectRatio="xMidYMid slice" style="object-fit: cover;" focusable="false">
+        <title>Placeholder</title>
+        </img>
+
+      </div>
+
+      <!-----------Канвас---------->
+      <div class="container-fluid">
+        <div class="offcanvas offcanvas-size-xl offcanvas-end" tabindex="-1"
+             th:id="'offcanvasObservation' + ${observation.id}" aria-labelledby="offcanvasResponsiveLabel">
+          <div class="offcanvas-body" th:id="places-offcanvas">
+            <button type="button" class="btn-close btn-close-white m-5 p-2"
+                    style="position: absolute; z-index: 2;" data-bs-dismiss="offcanvas"
+                    aria-label="Закрыть"></button>
+            <!-------------------------Карусель-------------------------->
+            <div th:id="'carouselObservationIndicators' + ${observation.id}"
+                 class="carousel slide carousel-fade" data-bs-ride="carousel">
+              <div class="carousel-indicators" style="padding-bottom: 48px;">
+                <button type="button" th:each="photo : ${observation.observationPhotos}"
+                        th:classappend="${photoStat.first} ? active : ''"
+                        th:data-bs-target="'#carouselObservationIndicators' + ${observation.id}"
+                        th:data-bs-slide-to="${photoStat.index}" aria-label="Slide"></button>
+              </div>
+              <div class="carousel-inner">
+                <div class="carousel-item" th:each="photo : ${observation.observationPhotos}"
+                     th:classappend="${photoStat.first} ? active : ''">
+                  <a th:href="|data:image/jpeg;base64,${photo.pathPhoto}|"
+                     th:data-fancybox="'gallery' + ${observation.id}">
+                    <img th:src="|data:image/jpeg;base64,${photo.pathPhoto}|" class="d-block w-100"
+                         style="object-fit: cover;"
+                         height="600px" alt="Фотография наблюдения">
+                  </a>
+                </div>
+              </div>
+              <button class="carousel-control-prev" type="button"
+                      th:data-bs-target="'#carouselObservationIndicators' + ${observation.id}"
+                      data-bs-slide="prev">
+                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Previous</span>
+              </button>
+              <button class="carousel-control-next" type="button"
+                      th:data-bs-target="'#carouselObservationIndicators' + ${observation.id}"
+                      data-bs-slide="next">
+                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Next</span>
+              </button>
+            </div>
+
+            <div th:id="observationOffcanvasContainer" class="bg-light text-center pb-4">
+              <!-------------------------Категория------------------------->
+              <h3 style="margin-top: -20px;position: absolute;left: 0;right: 0;text-align: center;">
+                <span class="badge bg-warning rounded-5" th:text="${observation.category.title}"></span></h3>
+
+              <ul class="navbar-nav justify-content-end flex-grow-1 pe-5 ps-5">
+                <!-------------------------Название-------------------------->
+                <li class="nav-item">
+                  <h2 class="pt-4 pb-4" style="margin-bottom: 0px;" th:text="${observation.object}"></h2>
+                </li>
+                <!-------------------------Описание-------------------------->
+                <li class="nav-item">
+                  <div class="card text-bg-light w-100 mb-3 rounded-4">
+                    <div class="card-body">
+                      <p class="card-text"
+                         th:text="${observation.comment}"></p>
+                    </div>
+                  </div>
+                </li>
+                <!-------------------------Расписание------------------------>
+<!--                <li class="nav-item">-->
+<!--                  <div class="accordion accordion-flush" id="accordionFlushSchedule1"-->
+<!--                       style="&#45;&#45;bs-accordion-bg: rgba(255, 255, 255, 0);">-->
+<!--                    <div class="accordion-item">-->
+<!--                      <h2 class="accordion-header" id="flush-headingTwo">-->
+<!--                        <button class="accordion-button collapsed" type="button"-->
+<!--                                data-bs-toggle="collapse" data-bs-target="#flush-collapseTwo"-->
+<!--                                aria-expanded="false" aria-controls="flush-collapseTwo">-->
+<!--                          Расписание-->
+<!--                        </button>-->
+<!--                      </h2>-->
+<!--                      <div id="flush-collapseTwo" class="accordion-collapse collapse"-->
+<!--                           aria-labelledby="flush-headingTwo"-->
+<!--                           data-bs-parent="#accordionFlushSchedule1">-->
+<!--                        <div class="accordion-body">-->
+<!--                          <div th:each="schedule : ${mark.schedules}">-->
+<!--                            <div class="row d-flex align-items-end">-->
+<!--                              <div class="col-6" th:switch="${schedule.day}">-->
+<!--                                <h6 class="text-start mt-1 mb-1" th:case="1">-->
+<!--                                  Понедельник</h6>-->
+<!--                                <h6 class="text-start mt-1 mb-1" th:case="2">-->
+<!--                                  Вторник</h6>-->
+<!--                                <h6 class="text-start mt-1 mb-1" th:case="3"> Среда</h6>-->
+<!--                                <h6 class="text-start mt-1 mb-1" th:case="4">-->
+<!--                                  Четверг</h6>-->
+<!--                                <h6 class="text-start mt-1 mb-1" th:case="5">-->
+<!--                                  Пятница</h6>-->
+<!--                                <h6 class="text-start mt-1 mb-1" th:case="6">-->
+<!--                                  Суббота</h6>-->
+<!--                                <h6 class="text-start mt-1 mb-1" th:case="7">-->
+<!--                                  Воскресенье</h6>-->
+<!--                              </div>-->
+
+<!--                              <div class="col-6">-->
+<!--                                <p class="text-end mt-1 mb-1"-->
+<!--                                   th:if="${schedule.start == schedule.end}"-->
+<!--                                   th:text="Выходной"></p>-->
+<!--                                <p class="text-end mt-1 mb-1"-->
+<!--                                   th:if="${schedule.start == '00:00' && schedule.end == '23:59'}"-->
+<!--                                   th:text="Круглосуточно"></p>-->
+<!--                                <p class="text-end mt-1 mb-1"-->
+<!--                                   th:if="${schedule.start != schedule.end && schedule.end != '23:59'}"-->
+<!--                                   th:text="${schedule.start} + '-' + ${schedule.end}"></p>-->
+<!--                              </div>-->
+
+<!--                            </div>-->
+<!--                            <hr class="featurette-divider">-->
+<!--                          </div>-->
+<!--                        </div>-->
+<!--                      </div>-->
+<!--                    </div>-->
+<!--                  </div>-->
+
+<!--                </li>-->
+              </ul>
+            </div>
+
+
+          </div>
+        </div>
+      </div>
+      <!-------------------Конец канваса------------------>
+
+    </div>
+    <hr class="featurette-divider">
+  </div>
+
+  <!------------------------------------------------------------------------------------>
+
+  <hr class="my-4">
+
+  <nav aria-label="Pagination" th:if="${totalPages > 0}">
+    <ul class="pagination justify-content-center">
+      <li class="page-item" th:classappend="${currentPage == 1} ? 'disabled'">
+        <a th:replace="fragments/paging :: pagingObservations(1, '<<', 'Первая страница')"></a>
+      </li>
+      <li class="page-item font-weight-bold" th:classappend="${currentPage == 1} ? 'disabled'">
+        <a th:replace="fragments/paging :: pagingObservations(${currentPage - 1}, 'Пред.', 'Предыдущая страница')"></a>
+      </li>
+      <li class="page-item disabled" th:if="${currentPage - 2 > 1}">
+        <a class="page-link" href="#">...</a>
+      </li>
+      <li class="page-item" th:classappend="${page == currentPage} ? 'active'"
+          th:each="page : ${#numbers.sequence(currentPage > 2 ? currentPage - 2 : 1, currentPage + 2 < totalPages ? currentPage + 2 : totalPages)}">
+        <a th:replace="fragments/paging :: pagingObservations(${page}, ${page}, 'Page ' + ${page})"></a>
+      </li>
+      <li class="page-item disabled" th:if="${currentPage + 2 < totalPages}">
+        <a class="page-link" href="#">...</a>
+      </li>
+      <li class="page-item font-weight-bold" th:classappend="${currentPage == totalPages} ? 'disabled'">
+        <a th:replace="fragments/paging :: pagingObservations(${currentPage + 1},'След.', 'Следующая страница')"></a>
+      </li>
+      <li class="page-item" th:classappend="${currentPage == totalPages} ? 'disabled'">
+        <a th:replace="fragments/paging :: pagingObservations(${totalPages}, '>>', 'Последняя страница')"></a>
+      </li>
+    </ul>
+  </nav>
+</div>
+
+<div th:replace="fragments/footer :: footer"></div>
+
+<script type="text/javascript">
+    function changePageSize() {
+      $("#searchForm").submit();
+    }
+    function changeFilter() {
+      $("#searchForm").submit();
+    }
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.4.1/dist/jquery.min.js"></script>
+
+<script src="https://cdn.jsdelivr.net/gh/fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4"
+        crossorigin="anonymous"></script>
+</body>
+</html>

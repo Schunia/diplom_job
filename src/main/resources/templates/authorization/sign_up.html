@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Регистрация</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css"
+          rel="stylesheet" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65"
+          crossorigin="anonymous">
+</head>
+
+<body class="bg-dark">
+<div class="container">
+    <section class="vh-100">
+        <div class="container py-5 h-100">
+            <div class="row d-flex justify-content-center align-items-center h-100">
+                <div class="col col-xl-10">
+                    <div class="card" style="border-radius: 1rem;">
+                        <div class="row g-0">
+
+                            <div class="col-md-6 col-lg-7 d-flex align-items-center">
+                                <div class="card-body p-4 p-lg-5 text-black">
+
+                                    <form class="needs-validation" th:action="@{/sign_up}" enctype="multipart/form-data"
+                                          th:object="${user}" method="post" novalidate>
+
+                                        <div class="d-flex align-items-center mb-3 pb-1">
+                                            <!--                                            <i class="fas fa-cubes fa-2x me-3" style="color: #ff6219;"></i>-->
+                                            <img class="bi me-2" width="80" height="80"
+                                                 src="/assets/brand/logo.png">
+                                            <span class="h1 fw-bold mb-0">AstRo</span>
+                                        </div>
+
+                                        <h5 class="fw-normal mb-3 pb-3" style="letter-spacing: 1px;">Регистрация</h5>
+
+<!--                                        <div class="input-group">-->
+<!--                                            <div class="form-floating mb-3">-->
+<!--                                                <input type="text" class="form-control" id="floatingLastName"-->
+<!--                                                       th:field="*{lastName}" placeholder="Фамилия" required>-->
+<!--                                                <label for="floatingLastName">Фамилия</label>-->
+<!--                                                <div class="invalid-feedback">-->
+<!--                                                    Введите фамилию.-->
+<!--                                                </div>-->
+<!--                                            </div>-->
+<!--                                            <div class="form-floating mb-3">-->
+<!--                                                <input type="text" class="form-control" id="floatingFirstName"-->
+<!--                                                       th:field="*{firstName}" placeholder="Имя" required>-->
+<!--                                                <label for="floatingFirstName">Имя</label>-->
+<!--                                                <div class="invalid-feedback">-->
+<!--                                                    Введите имя.-->
+<!--                                                </div>-->
+<!--                                            </div>-->
+<!--                                        </div>-->
+
+                                        <div class="form-floating mb-3">
+                                            <input type="text" class="form-control" id="floatingLogin"
+                                                   placeholder="Логин" th:field="*{login}" required>
+                                            <label for="floatingLogin" th:if="${errorMessage == ''}">Логин</label>
+                                            <label class="text-danger" for="floatingLogin" th:if="${errorMessage != ''}" th:text="${errorMessage}"></label>
+                                            <div class="invalid-feedback">
+                                                Придумайте логин.
+                                            </div>
+                                        </div>
+
+                                        <div class="form-floating mb-3">
+                                            <input type="email" class="form-control" id="floatingInput"
+                                                   placeholder="Email" th:field="*{email}" required>
+                                            <label for="floatingInput" th:if="${errorMessage == ''}">Email</label>
+                                                <label class="text-danger" for="floatingInput" th:if="${errorMessage != ''}" th:text="${errorMessage}"></label>
+                                            <div class="invalid-feedback">
+                                                Введите адрес эл.почты.
+                                            </div>
+                                        </div>
+
+                                        <div class="form-floating mb-3">
+                                            <div class="input-group">
+                                                <input type="file" class="form-control" name="image" id="photo" required>
+                                                <label class="input-group-text" for="photo">Фото</label>
+                                            </div>
+                                        </div>
+
+                                        <div class="form-floating mb-3">
+                                            <input type="password" class="form-control" id="floatingPassword"
+                                                   placeholder="Пароль" th:field="*{password}" required>
+                                            <label for="floatingPassword">Пароль</label>
+                                            <div class="invalid-feedback">
+                                                Придумайте пароль.
+                                            </div>
+                                        </div>
+
+<!--                                        <div class="form-floating mb-3">-->
+<!--                                            <input type="password" class="form-control" id="floatingConfirmPassword"-->
+<!--                                                   placeholder="Подтвердите пароль" required>-->
+<!--                                            <label for="floatingConfirmPassword">Подтвердите пароль</label>-->
+<!--                                            <div class="invalid-feedback">-->
+<!--                                                Повторите пароль.-->
+<!--                                            </div>-->
+<!--                                        </div>-->
+
+                                        <input type="hidden" name="_csrf" value="${_csrf.token}">
+
+                                        <div class="col-12">
+                                            <button class="w-100 btn btn-dark btn-lg" type="submit">Зарегистрироваться
+                                            </button>
+                                        </div>
+
+                                        <hr class="my-4">
+
+                                        <p class="mb-3 pb-lg-2" style="color: #4e555c;">Уже есть учётная запись?
+                                            <a th:href="@{/login}" style="color: #005ebd;">Войти</a></p>
+                                        <a href="#!" class="small text-muted">Условия использования.</a>
+                                        <a href="#!" class="small text-muted">Политика конфиденциальности</a>
+                                    </form>
+
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 col-lg-5 d-none d-md-block">
+                                <img th:src="@{/photos/auth.jpg}"
+                                     alt="login form" class="img-fluid"
+                                     style="border-radius: 0 1rem 1rem 0; height: -webkit-fill-available;"/>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4"
+        crossorigin="anonymous"></script>
+<script src="/assets/dist/js/form-validation.js"></script>
+</body>
+</html>

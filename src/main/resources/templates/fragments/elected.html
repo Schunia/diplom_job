@@ -1,0 +1,320 @@
+
+
+<div th:fragment="electedExcursions(item, index)" class="col" th:if="${#arrays.length(excursions) > (item + index)}">
+    <div class="card h-100 rounded-4" th:if="${#arrays.length(excursions) > (item + index)}">
+        <img th:src="|data:image/jpeg;base64,${excursions[item + index].excursionPhotos[0].pathPhoto}|"
+             class="card-img-top rounded-4"
+             style="object-fit: cover; height: 280px; margin-bottom: -12px;"
+             alt="...">
+        <div class="card-body">
+            <h5 class="title pb-1 pt-3"
+                th:text="${excursions[item + index].title}"></h5>
+            <h6><span class="badge bg-warning">
+                            <span th:text="${excursions[item + index].price}"></span>
+                            <i class="fa fa-rub" aria-hidden="true"></i></span>
+            </h6>
+        </div>
+        <div class="card-body">
+
+            <p class="text-truncate" style="-webkit-line-clamp: 3; display: -webkit-box;
+                        -webkit-box-orient: vertical; overflow: hidden; white-space: inherit;"
+               th:text="${excursions[item + index].description}"></p>
+        </div>
+
+        <!----------    Действия для гида    ------------------------------------------------->
+        <div class="card-footer p-0" sec:authorize="hasRole('ROLE_GUIDE')"
+             th:if="${excursions[item + index].guide.id} == ${user.guideId}">
+            <div class="btn-group w-100" role="group" aria-label="Buttons for Guide">
+                <a type="button" class="btn btn-primary w-100"
+                   th:href="@{'guides/edit/' + ${excursions[item + index].guide.id} + '/excursion/' + ${excursions[item + index].id} + '/edit'}"
+                   style="border-top-left-radius: 16px; border-bottom-left-radius: 0px;">Изменить</a>
+                <a type="button" class="btn btn-danger w-100"
+                   th:href="@{'guides/edit/' + ${excursions[item + index].guide.id} + '/excursion/' + ${excursions[item + index].id} + '/delete'}"
+                   style="border-top-right-radius: 16px; border-bottom-right-radius: 0px;">Удалить</a>
+            </div>
+        </div>
+
+        <!----------    Действия для зарег пользователя    ----------------------------------->
+        <div class="card-footer p-0" sec:authorize="isAuthenticated()"
+             style="border-bottom-left-radius: 16px; border-bottom-right-radius: 16px;">
+            <form class="needs-validation" action="#" th:action="@{'/excursion/' + ${excursions[item + index].id} + '/elect/elected'}"
+                  th:object="${excursions[item + index]}" enctype="multipart/form-data" method="post" id="form1">
+                <div class="btn-group w-100" role="group" aria-label="Базовая группа переключателей флажков">
+                    <button class="btn btn-primary w-100" type="button" data-bs-toggle="offcanvas"
+                            th:data-bs-target="'#offcanvasExcursion' + ${excursions[item + index].id}"
+                            aria-controls="offcanvasResponsive"
+                            style="border-bottom-left-radius: 16px; border-top-left-radius: 0px;">Подробнее
+                    </button>
+
+                    <button type="submit" th:if="${not user.userElectedExcursions.?[excursion.title == '__${excursions[item + index].title}__'].isEmpty()}"
+                            style="border-bottom-right-radius: 16px; border-top-right-radius: 0px;"
+                            class="btn btn-danger w-100" th:id="${excursions[item + index].id}" autocomplete="off">В избранном
+                    </button>
+                    <button type="submit" th:unless="${not user.userElectedExcursions.?[excursion.title == '__${excursions[item + index].title}__'].isEmpty()}"
+                            style="border-bottom-right-radius: 16px; border-top-right-radius: 0px;"
+                            class="btn btn-outline-danger w-100" th:id="${excursions[item + index].id}" autocomplete="off">В избранное
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div th:fragment="electedExcursionsCanvas(item, index)" th:if="${#arrays.length(excursions) > (item + index)}" class="container-fluid">
+    <div class="offcanvas offcanvas-size-xl offcanvas-end" tabindex="-1"
+         th:id="'offcanvasExcursion' + ${excursions[item + index].id}" aria-labelledby="offcanvasResponsiveLabel">
+
+        <div class="offcanvas-body" th:id="excursions-offcanvas">
+
+            <button type="button" class="btn-close btn-close-white m-5 p-2"
+                    style="position: absolute; z-index: 2;" data-bs-dismiss="offcanvas"
+                    aria-label="Закрыть"></button>
+
+            <!-----------Карусель---------->
+            <div th:id="'carouselExcursionIndicators' + ${excursions[item + index].id}"
+                 class="carousel slide carousel-fade" data-bs-ride="carousel">
+                <div class="carousel-indicators" style="padding-bottom: 48px;">
+                    <button type="button" th:each="photo : ${excursions[item + index].excursionPhotos}"
+                            th:classappend="${photoStat.first} ? active : ''"
+                            th:data-bs-target="'#carouselExcursionIndicators' + ${excursions[item + index].id}"
+                            th:data-bs-slide-to="${photoStat.index}" aria-label="Slide"></button>
+                </div>
+                <div class="carousel-inner">
+                    <div class="carousel-item" th:each="photo : ${excursions[item + index].excursionPhotos}"
+                         th:classappend="${photoStat.first} ? active : ''">
+                        <a th:href="|data:image/jpeg;base64,${photo.pathPhoto}|" th:data-fancybox="'gallery' + ${excursions[item + index].id}">
+                            <img th:src="|data:image/jpeg;base64,${photo.pathPhoto}|" class="d-block w-100"
+                                 style="object-fit: cover;"
+                                 height="600px" alt="Фотография достопримечательности">
+                        </a>
+                    </div>
+                </div>
+                <button class="carousel-control-prev" type="button"
+                        th:data-bs-target="'#carouselExcursionIndicators' + ${excursions[item + index].id}"
+                        data-bs-slide="prev">
+                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Previous</span>
+                </button>
+                <button class="carousel-control-next" type="button"
+                        th:data-bs-target="'#carouselExcursionIndicators' + ${excursions[item + index].id}"
+                        data-bs-slide="next">
+                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Next</span>
+                </button>
+            </div>
+
+            <div th:id="excursionOffcanvasContainer" class="bg-light text-center pb-4">
+                <ul class="navbar-nav justify-content-end flex-grow-1 pe-5 ps-5">
+                    <li class="nav-item">
+                        <h2 class="pt-4" style="margin-bottom: 0px;" th:text="${excursions[item + index].title}"></h2>
+                        <!--                            <span class="badge rounded-pill text-bg-success" style="margin-bottom: 1em;" id="Category">Категория</span>-->
+                    </li>
+                    <hr class="my-4">
+                    <li class="nav-item">
+                        <h3><span class="badge bg-warning" th:text="${excursions[item + index].duration}"></span>
+                            <span class="badge bg-warning">
+                            <span th:text="${excursions[item + index].price}"></span>
+                            <i class="fa fa-rub" aria-hidden="true"></i></span></h3>
+                    </li>
+                    <li class="nav-item">
+                        <p th:text="${excursions[item + index].description}"></p>
+                    </li>
+                    <hr class="my-4">
+                    <li class="nav-item">
+                        <div class="row g-5">
+                            <div class="col-4">
+                                <div style="
+    width: 100%;
+    height: 0;
+    padding-top: 100%;
+    position: relative;
+    overflow: hidden;
+    border-radius: 50%;
+">
+                                    <a th:href="|data:image/jpeg;base64,${excursions[item + index].guide.pathPhoto}|"
+                                       data-fancybox="guide">
+                                        <img th:src="|data:image/jpeg;base64,${excursions[item + index].guide.pathPhoto}|"
+                                             class="w-100 d-block"
+                                             style="object-fit: cover;/* max-height: 300px; */top: 0;position: absolute;/* max-width: 100%; */object-fit: cover;width: 100%;height: 100%;"
+                                             alt="Фотография гида">
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="col-8">
+                                <h2 th:text="${excursions[item + index].guide.lastName} + ${excursions[item + index].guide.firstName}"></h2>
+                                <p th:text="${excursions[item + index].guide.email}"></p>
+                                <p th:text="${excursions[item + index].guide.telNumber}"></p>
+                            </div>
+                        </div>
+
+                    </li>
+                </ul>
+            </div>
+
+
+        </div>
+    </div>
+</div>
+
+
+
+
+
+<!--Экскурсии данного гида-->
+<div th:fragment="guideExcursions(item, index)" class="col" th:if="${#arrays.length(guide.excursions) > (item + index)}">
+    <div class="card h-100 rounded-4" th:if="${#arrays.length(guide.excursions) > (item + index)}">
+        <img th:src="|data:image/jpeg;base64,${guide.excursions[item + index].excursionPhotos[0].pathPhoto}|"
+             class="card-img-top rounded-4"
+             style="object-fit: cover; height: 280px; margin-bottom: -12px;"
+             alt="...">
+        <div class="card-body">
+            <h5 class="title pb-1 pt-3"
+                th:text="${guide.excursions[item + index].title}"></h5>
+            <h6><span class="badge bg-warning" th:text="${guide.excursions[item + index].duration}"></span>
+                <span class="badge bg-warning">
+                            <span th:text="${guide.excursions[item + index].price}"></span>
+                            <i class="fa fa-rub" aria-hidden="true"></i></span>
+            </h6>
+        </div>
+        <div class="card-body">
+
+            <p class="text-truncate" style="-webkit-line-clamp: 3; display: -webkit-box;
+                        -webkit-box-orient: vertical; overflow: hidden; white-space: inherit;"
+               th:text="${guide.excursions[item + index].description}"></p>
+        </div>
+
+        <!----------    Действия для гида    ------------------------------------------------->
+        <div class="card-footer p-0" sec:authorize="hasRole('ROLE_GUIDE')"
+             th:if="${guide.excursions[item + index].guide.id} == ${user.guideId}">
+            <div class="btn-group w-100" role="group" aria-label="Buttons for Guide">
+                <a type="button" class="btn btn-primary w-100"
+                   th:href="@{'guides/edit/' + ${guide.excursions[item + index].guide.id} + '/excursion/' + ${guide.excursions[item + index].id} + '/edit'}"
+                   style="border-top-left-radius: 16px; border-bottom-left-radius: 0px;">Изменить</a>
+                <a type="button" class="btn btn-danger w-100"
+                   th:href="@{'guides/edit/' + ${guide.excursions[item + index].guide.id} + '/excursion/' + ${guide.excursions[item + index].id} + '/delete'}"
+                   style="border-top-right-radius: 16px; border-bottom-right-radius: 0px;">Удалить</a>
+            </div>
+        </div>
+
+        <!----------    Действия для зарег пользователя    ----------------------------------->
+        <div class="card-footer p-0" sec:authorize="isAuthenticated()"
+             style="border-bottom-left-radius: 16px; border-bottom-right-radius: 16px;">
+            <form class="needs-validation" action="#" th:action="@{'/excursion/' + ${guide.excursions[item + index].id} + '/elect/elected'}"
+                  th:object="${guide.excursions[item + index]}" enctype="multipart/form-data" method="post" id="form3">
+                <div class="btn-group w-100" role="group" aria-label="Базовая группа переключателей флажков">
+                    <button class="btn btn-primary w-100" type="button" data-bs-toggle="offcanvas"
+                            th:data-bs-target="'#offcanvasExcursion' + ${guide.excursions[item + index].id}"
+                            aria-controls="offcanvasResponsive"
+                            style="border-bottom-left-radius: 16px; border-top-left-radius: 0px;">Подробнее
+                    </button>
+
+                    <button type="submit" th:if="${not user.userElectedExcursions.?[excursion.title == '__${guide.excursions[item + index].title}__'].isEmpty()}"
+                            style="border-bottom-right-radius: 16px; border-top-right-radius: 0px;"
+                            class="btn btn-danger w-100" th:id="${guide.excursions[item + index].id}" autocomplete="off">В избранном
+                    </button>
+                    <button type="submit" th:unless="${not user.userElectedExcursions.?[excursion.title == '__${guide.excursions[item + index].title}__'].isEmpty()}"
+                            style="border-bottom-right-radius: 16px; border-top-right-radius: 0px;"
+                            class="btn btn-outline-danger w-100" th:id="${guide.excursions[item + index].id}" autocomplete="off">В избранное
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div th:fragment="guideExcursionsCanvas(item, index)" th:if="${#arrays.length(guide.excursions) > (item + index)}" class="container-fluid">
+    <div class="offcanvas offcanvas-size-xl offcanvas-end" tabindex="-1"
+         th:id="'offcanvasExcursion' + ${guide.excursions[item + index].id}" aria-labelledby="offcanvasResponsiveLabel">
+
+        <div class="offcanvas-body" th:id="excursions-offcanvas">
+
+            <button type="button" class="btn-close btn-close-white m-5 p-2"
+                    style="position: absolute; z-index: 2;" data-bs-dismiss="offcanvas"
+                    aria-label="Закрыть"></button>
+
+            <!-----------Карусель---------->
+            <div th:id="'carouselExcursionIndicators' + ${guide.excursions[item + index].id}"
+                 class="carousel slide carousel-fade" data-bs-ride="carousel">
+                <div class="carousel-indicators" style="padding-bottom: 48px;">
+                    <button type="button" th:each="photo : ${guide.excursions[item + index].excursionPhotos}"
+                            th:classappend="${photoStat.first} ? active : ''"
+                            th:data-bs-target="'#carouselExcursionIndicators' + ${guide.excursions[item + index].id}"
+                            th:data-bs-slide-to="${photoStat.index}" aria-label="Slide"></button>
+                </div>
+                <div class="carousel-inner">
+                    <div class="carousel-item" th:each="photo : ${guide.excursions[item + index].excursionPhotos}"
+                         th:classappend="${photoStat.first} ? active : ''">
+                        <a th:href="|data:image/jpeg;base64,${photo.pathPhoto}|" th:data-fancybox="'gallery' + ${guide.excursions[item + index].id}">
+                            <img th:src="|data:image/jpeg;base64,${photo.pathPhoto}|" class="d-block w-100"
+                                 style="object-fit: cover;"
+                                 height="600px" alt="Фотография достопримечательности">
+                        </a>
+                    </div>
+                </div>
+                <button class="carousel-control-prev" type="button"
+                        th:data-bs-target="'#carouselExcursionIndicators' + ${guide.excursions[item + index].id}"
+                        data-bs-slide="prev">
+                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Previous</span>
+                </button>
+                <button class="carousel-control-next" type="button"
+                        th:data-bs-target="'#carouselExcursionIndicators' + ${guide.excursions[item + index].id}"
+                        data-bs-slide="next">
+                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Next</span>
+                </button>
+            </div>
+
+            <div th:id="excursionOffcanvasContainer" class="bg-light text-center pb-4">
+                <ul class="navbar-nav justify-content-end flex-grow-1 pe-5 ps-5">
+                    <li class="nav-item">
+                        <h2 class="pt-4" style="margin-bottom: 0px;" th:text="${guide.excursions[item + index].title}"></h2>
+                        <!--                            <span class="badge rounded-pill text-bg-success" style="margin-bottom: 1em;" id="Category">Категория</span>-->
+                    </li>
+                    <hr class="my-4">
+                    <li class="nav-item">
+                        <h3><span class="badge bg-warning" th:text="${guide.excursions[item + index].duration}"></span>
+                            <span class="badge bg-warning">
+                            <span th:text="${guide.excursions[item + index].price}"></span>
+                            <i class="fa fa-rub" aria-hidden="true"></i></span></h3>
+                    </li>
+                    <li class="nav-item">
+                        <p th:text="${guide.excursions[item + index].description}"></p>
+                    </li>
+                    <hr class="my-4">
+                    <li class="nav-item">
+                        <div class="row g-5">
+                            <div class="col-4">
+                                <div style="
+    width: 100%;
+    height: 0;
+    padding-top: 100%;
+    position: relative;
+    overflow: hidden;
+    border-radius: 50%;
+">
+                                    <a th:href="|data:image/jpeg;base64,${guide.excursions[item + index].guide.pathPhoto}|"
+                                       data-fancybox="guide">
+                                        <img th:src="|data:image/jpeg;base64,${guide.excursions[item + index].guide.pathPhoto}|"
+                                             class="w-100 d-block"
+                                             style="object-fit: cover;/* max-height: 300px; */top: 0;position: absolute;/* max-width: 100%; */object-fit: cover;width: 100%;height: 100%;"
+                                             alt="Фотография гида">
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="col-8">
+                                <h2 th:text="${guide.excursions[item + index].guide.lastName} + ' ' +
+                                ${guide.excursions[item + index].guide.firstName} + ' ' + ${guide.excursions[item + index].guide.patronymic}"></h2>
+                                <p th:text="${guide.excursions[item + index].guide.email}"></p>
+                                <p th:text="${guide.excursions[item + index].guide.telNumber}"></p>
+                            </div>
+                        </div>
+
+                    </li>
+                </ul>
+            </div>
+
+
+        </div>
+    </div>
+</div>

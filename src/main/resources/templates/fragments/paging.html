@@ -1,0 +1,34 @@
+<a th:fragment="pagingMeetings(pageNum, label, tooltip)" class="page-link"
+   th:href="@{'/meetings?' + ${keyword!=null && keyword!=''? 'keyword=' + keyword + '&' : ''} +
+                'page=' + ${pageNum} + '&size=' + ${pageSize} + '&sortField=' + ${sortField} + '&sortDir=' + ${sortDir} + '&scheme=' + ${scheme}}"
+   th:title="${tooltip}" rel="tooltip">
+  [[${label}]]
+</a>
+
+<a th:fragment="pagingObservations(pageNum, label, tooltip)" class="page-link"
+   th:href="@{'/observations?' + ${keyword!=null && keyword!=''? 'keyword=' + keyword + '&' : ''} +
+                'page=' + ${pageNum} + '&size=' + ${pageSize} + '&sortField=' + ${sortField} + '&sortDir=' + ${sortDir} + '&scheme=' + ${scheme}}"
+   th:title="${tooltip}" rel="tooltip">
+  [[${label}]]
+</a>
+
+<a th:fragment="pagingArticles(pageNum, label, tooltip)" class="page-link"
+   th:href="@{'/articles?' + ${keyword!=null && keyword!=''? 'keyword=' + keyword + '&' : ''} +
+                'page=' + ${pageNum} + '&size=' + ${pageSize} + '&sortField=' + ${sortField} + '&sortDir=' + ${sortDir} + '&scheme=' + ${scheme}}"
+   th:title="${tooltip}" rel="tooltip">
+  [[${label}]]
+</a>
+
+<a th:fragment="pagingLectures(pageNum, label, tooltip)" class="page-link"
+   th:href="@{'/lectures?' + ${keyword!=null && keyword!=''? 'keyword=' + keyword + '&' : ''} +
+                'page=' + ${pageNum} + '&size=' + ${pageSize} + '&sortField=' + ${sortField} + '&sortDir=' + ${sortDir} + '&scheme=' + ${scheme}}"
+   th:title="${tooltip}" rel="tooltip">
+  [[${label}]]
+</a>
+
+<a th:fragment="pagingGallery(pageNum, label, tooltip)" class="page-link"
+   th:href="@{'/articles?' + ${keyword!=null && keyword!=''? 'keyword=' + keyword + '&' : ''} +
+                'page=' + ${pageNum} + '&size=' + ${pageSize} + '&sortField=' + ${sortField} + '&sortDir=' + ${sortDir} + '&scheme=' + ${scheme}}"
+   th:title="${tooltip}" rel="tooltip">
+  [[${label}]]
+</a>

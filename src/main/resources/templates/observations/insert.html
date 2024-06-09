@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity5">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Наблюдения-Добавление</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css"
+          rel="stylesheet" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65"
+          crossorigin="anonymous">
+
+    <link rel="icon" type="image/x-icon" href="/assets/brand/logo.png"/>
+    <!-- Font Awesome icons (free version)-->
+    <script src="https://use.fontawesome.com/releases/v6.3.0/js/all.js" crossorigin="anonymous"></script>
+    <!-- Google fonts-->
+    <link href="https://fonts.googleapis.com/css?family=Varela+Round" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i"
+          rel="stylesheet"/>
+    <!-- Core theme CSS (includes Bootstrap)-->
+    <link href="../assets/dist/css/styles.css" rel="stylesheet"/>
+</head>
+<body class="bg-light">
+
+<div th:replace="~{fragments/navigation :: navigation}"></div>
+
+<div class="container">
+    <main>
+        <div class="py-5 text-center">
+            <img class="d-block mx-auto mb-4" src="/assets/brand/logo.png" alt="" width="72" height="72">
+            <h2>Наблюдение</h2>
+            <p class="lead">При заполнении данных не забывайте сохранять пунктуацию и указывать только актуальные
+                данные.</p>
+        </div>
+
+        <div class="row g-5">
+            <div class="col-md-11 col-lg-12">
+                <form class="needs-validation" action="#" th:action="@{/observations/addingObservation}"
+                      th:object="${observation}" method="post" enctype="multipart/form-data" novalidate>
+                    <div class="row g-3">
+
+                        <div class="col-6">
+                            <label for="objectlbl" class="form-label">Название объекта</label>
+                            <input type="text" class="form-control" id="objectlbl" th:field="*{object}"
+                                   placeholder="Название" value="" required>
+                            <div class="invalid-feedback">
+                                Требуется заполнить название.
+                            </div>
+                        </div>
+
+                        <div class="col-6">
+                            <label for="date" class="form-label">Дата наблюдения</label>
+                            <input type="datetime-local" class="form-control" id="date" placeholder="Дата"
+                                   th:field="*{date}" required>
+                            <div class="invalid-feedback">
+                                Требуется указать дату.
+                            </div>
+                        </div>
+
+                        <div class="col-12">
+                            <label for="note" class="form-label">Описание</label>
+                            <textarea class="form-control" id="note" th:field="*{note}"
+                                      rows="3" placeholder="Описание" required></textarea>
+                            <div class="invalid-feedback">
+                                Требуется заполнить описание.
+                            </div>
+                        </div>
+
+                        <div class="col-4">
+                            <label for="category" class="form-label">Категория</label>
+                            <select class="form-select" id="category" required th:field="*{category}">
+                                <option th:each="category : ${categories}" th:value="${category.id}"
+                                        th:text="${category.title}"></option>
+                            </select>
+                            <div class="invalid-feedback">
+                                Выберите категорию.
+                            </div>
+                        </div>
+
+                        <div class="col-4">
+                            <label for="address" class="form-label">Место</label>
+                            <input type="text" class="form-control" id="address" th:field="*{place}"
+                                   placeholder="Владимир, ул. Горького 66" value="" required>
+                            <div class="invalid-feedback">
+                                Требуется указать место.
+                            </div>
+                        </div>
+
+                        <div class="col-sm-4">
+                            <div class="form-check form-switch">
+                                <input th:if="${member.roles[0].name == 'ROLE_STUDENT'}" class="form-check-input" type="checkbox" role="switch"
+                                       th:id="isHomework" th:field="*{isHomework}" th:checked="${isHomework}">
+                                <input th:unless="${member.roles[0].name == 'ROLE_STUDENT'}" class="form-check-input" type="checkbox" role="switch"
+                                       id="isHomework" th:field="*{isHomework}" th:checked="${isHomework}" disabled>
+                                <label class="form-check-label" for="isHomework">Домашнее задание</label>
+                            </div>
+                        </div>
+
+                        <div class="col-12" sec:authorize="hasRole('ROLE_ADMIN')">
+                            <label for="comment" class="form-label">Коментарий</label>
+                            <textarea class="form-control" id="comment" th:field="*{comment}"
+                                      rows="3" placeholder="Коментарий"></textarea>
+                        </div>
+
+                        <input id="id" type="hidden" th:field="*{id}"/>
+
+                        <hr class="my-4">
+
+                        <div class="col-12">
+                            <div class="input-group mb-3">
+                                <label for="photos" class="input-group-text">Фотографии</label>
+                                <input id="photos" class="form-control" type="file" accept="image/*" name="upload"
+                                       multiple required/>
+
+                                <div class="invalid-feedback">
+                                    Требуется добавить фото.
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <div class="col-sm-3">
+                            <a th:href="${previousUrl}" class="w-100 btn btn-outline-dark btn-lg"
+                               type="button">Назад</a>
+                        </div>
+                        <div class="col-sm-9">
+                            <button class="w-100 btn btn-outline-success btn-lg" onclick="able()" type="submit">
+                                Подтвердить
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+</div>
+<div th:replace="~{fragments/footer :: footer}"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4"
+        crossorigin="anonymous"></script>
+
+<script src="/assets/dist/js/form-validation.js"></script>
+</body>
+</html>

@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity5">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Новости</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css"
+          rel="stylesheet" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65"
+          crossorigin="anonymous">
+
+    <link rel="icon" type="image/x-icon" href="/assets/brand/logo.png"/>
+    <!-- Font Awesome icons (free version)-->
+    <script src="https://use.fontawesome.com/releases/v6.3.0/js/all.js" crossorigin="anonymous"></script>
+    <!-- Google fonts-->
+    <link href="https://fonts.googleapis.com/css?family=Varela+Round" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i"
+          rel="stylesheet"/>
+    <!-- Core theme CSS (includes Bootstrap)-->
+    <link href="../assets/dist/css/styles.css" rel="stylesheet"/>
+    <!-- FancyBox Для изображений-->
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/gh/fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css"/>
+</head>
+
+<body>
+<div th:replace="~{fragments/navigation :: navigation}"></div>
+<div class="container mt-4">
+    <div class="row justify-content-between">
+        <h1 class="col-sm-4">Новости</h1>
+        <a sec:authorize="hasRole('ROLE_ADMIN')" href="/news/create" class="col-sm-3 btn-lg btn btn-outline-dark">Добавить</a>
+    </div>
+    <hr class="my-4">
+    <div class="d-flex">
+        <div class="input-group" role="group" aria-label="Small button group">
+            <label class="input-group-text">Сортировать по:</label>
+            <a th:href="@{'/news?page=' + ${currentPage} + '&size=' + ${pageSize}
+                    + '&sortField=title&sortDir=' + ${reverseSortDir} + '&scheme=' + ${scheme}}"
+               class="btn btn-sm btn-outline-dark">
+                <span class="h6" th:if="${sortField} == 'title'">Названию</span>
+                <span class="h6" style="text-transform: capitalize;" th:unless="${sortField} == 'title'"><small>Названию</small></span>
+                <span th:if="${sortDir} == 'asc' and ${sortField} == 'title'">&#9650;</span>
+                <span th:if="${sortDir} == 'desc' and ${sortField} == 'title'">&#9660;</span>
+            </a>
+            <a th:href="@{'/news?page=' + ${currentPage} + '&size=' + ${pageSize}
+                    + '&sortField=date&sortDir=' + ${reverseSortDir} + '&scheme=' + ${scheme}}"
+               class="btn btn-sm btn-outline-dark">
+                <span class="h6" th:if="${sortField} == 'date'">Дате</span>
+                <span class="h6" style="text-transform: capitalize;"
+                      th:unless="${sortField} == 'date'"><small>Дате</small></span>
+                <span th:if="${sortDir} == 'asc' and ${sortField} == 'date'">&#9650;</span>
+                <span th:if="${sortDir} == 'desc' and ${sortField} == 'date'">&#9660;</span>
+            </a>
+
+        </div>
+
+        <!--        Смена режима отображения новостей-->
+            <div class="input-group" role="group" aria-label="Basic radio toggle button group">
+                <label class="input-group-text">Отобразить:</label>
+                <input type="radio" class="btn-check" name="btnradio" id="btnRadioTableOn" autocomplete="off"
+                       th:if="${scheme} == 'table'" checked>
+                <a th:href="@{'/news?page=' + ${currentPage} + '&size=' + ${pageSize} + '&sortField='
+                        + ${sortField} + '&sortDir=' + ${sortDir} + '&scheme=table'}"
+                   th:if="${scheme} == 'table'" style="text-transform: capitalize;"
+                   class="btn btn-sm btn-outline-dark"
+                   for="btnRadioTableOn"><span class="h6"><small>Таблица</small></span></a>
+
+                <input type="radio" class="btn-check" name="btnradio" id="btnRadioTable" autocomplete="off"
+                       th:unless="${scheme} == 'table'">
+                <a th:href="@{'/news?page=' + ${currentPage} + '&size=' + ${pageSize} + '&sortField='
+                        + ${sortField} + '&sortDir=' + ${sortDir} + '&scheme=table'}"
+                   th:unless="${scheme} == 'table'" style="text-transform: capitalize;"
+                   class="btn btn-sm btn-outline-dark" for="btnRadioTable"><span
+                        class="h6"><small>Таблица</small></span></a>
+
+                <input type="radio" class="btn-check" name="btnradio" id="btnRadioListOn" autocomplete="off"
+                       th:if="${scheme} == 'list'" checked>
+                <a th:href="@{'/news?page=' + ${currentPage} + '&size=' + ${pageSize} + '&sortField='
+                        + ${sortField} + '&sortDir=' + ${sortDir} + '&scheme=list'}"
+                   th:if="${scheme} == 'list'" style="text-transform: capitalize;"
+                   class="btn btn-sm btn-outline-dark"
+                   for="btnRadioListOn"><span class="h6"><small>Список</small></span></a>
+
+                <input type="radio" class="btn-check" name="btnradio" id="btnRadioList" autocomplete="off"
+                       th:unless="${scheme} == 'list'">
+                <a th:href="@{'/news?page=' + ${currentPage} + '&size=' + ${pageSize} + '&sortField='
+                        + ${sortField} + '&sortDir=' + ${sortDir} + '&scheme=list'}"
+                   th:unless="${scheme} == 'list'" style="text-transform: capitalize;"
+                   class="btn btn-sm btn-outline-dark" for="btnRadioList"><span
+                        class="h6"><small>Список</small></span></a>
+            </div>
+    </div>
+
+    <hr class="my-4">
+    <span th:if="${news.size() == 0}">Список новостей пуст</span>
+
+    <!------------------------------------------------------------------------------------>
+    <!--    Отображение новостей таблицей-->
+    <!------------------------------------------------------------------------------------>
+
+    <table th:if="${news.size() > 0}  and ${scheme} == 'table'" class="table table-hover">
+        <thead class="thead-dark">
+        <tr>
+            <td>Название</td>
+            <td>Описание</td>
+            <td>Дата</td>
+            <td>Дата мероприятия</td>
+            <td></td>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="item : ${news}">
+            <td th:text="${item.title}"/>
+            <td th:text="${item.description}"/>
+            <td th:text="${item.date}"/>
+            <!--            <td><img src="/assets/static/photos/guides/${guide.pathPhoto}.jpg"></td>-->
+            <td>
+                <!----------    Действия для админа    ----------------------------------------------->
+                <div class="btn-group" role="group" aria-label="Buttons for Admin"
+                     sec:authorize="hasRole('ROLE_ADMIN')">
+                    <button class="btn btn-primary" type="button" data-bs-toggle="modal"
+                            th:data-bs-target="'#detailNewsModal' + ${item.id}">Подробнее
+                    </button>
+                    <a type="button" class="btn btn-primary"
+                       th:href="@{'/news/edit/' + ${item.id}}">Редактировать</a>
+                    <button type="button" class="btn btn-danger" data-bs-toggle="modal"
+                            th:data-bs-target="'#deleteNewsModal' + ${item.id}">Удалить
+                    </button>
+                </div>
+                <!----------    Действия для незарег.пользователя    ------------------------------------->
+                <button sec:authorize="!hasRole('ROLE_ADMIN')" class="btn btn-primary" type="button"
+                        data-bs-toggle="modal"
+                        th:data-bs-target="'#detailNewsModal' + ${item.id}">Подробнее
+                </button>
+            </td>
+
+            <!-- Модальное окно удаления -->
+            <div class="modal fade" th:id="'deleteNewsModal' + ${item.id}" tabindex="-1" aria-labelledby="deleteModalLabel"
+                 aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content rounded-4">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Удаление новости</h5>
+                        </div>
+                        <div class="modal-body">
+                            <p th:text="'Вы уверены, что хотите удалить новость ' + ${item.title} + '?'"></p>
+                        </div>
+                        <div class="modal-footer p-0"
+                             style="border-bottom-left-radius: 16px; border-bottom-right-radius: 16px;">
+                            <div class="btn-group w-100 m-0" role="group">
+                                <button type="button" class="btn btn-outline-dark" data-bs-dismiss="modal"
+                                        style="border-bottom-left-radius: 12px; border-top-left-radius: 0px;">Закрыть
+                                </button>
+
+                                <a th:href="@{'/news/delete/' + ${item.id}}" type="button"
+                                   class="btn btn-outline-danger"
+                                   style="border-bottom-right-radius: 12px; border-top-right-radius: 0px;">Удалить</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-----------Модальное окно---------->
+            <div class="modal fade" th:id="'detailNewsModal' + ${item.id}" tabindex="-1"
+                 aria-labelledby="deleteModalLabel"
+                 aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
+                    <div class="modal-content rounded-4">
+
+                        <div class="modal-header">
+                            <!-------------------------Фото-------------------------->
+                            <div class="col-12 order-md-1">
+                                <a th:href="|data:image/jpeg;base64,${item.pathPhoto}|"
+                                   th:data-fancybox="'gallery' + ${item.id}">
+                                    <img th:src="|data:image/jpeg;base64,${item.pathPhoto}|" class="d-block w-100"
+                                         style="object-fit: cover;"
+                                         height="600px" alt="Фотография новости">
+                                </a>
+                            </div>
+                            <!--------------------------------------------------->
+                        </div>
+                        <div class="modal-body">
+                            <h6 style="position: absolute;left: 0;right: 0;text-align: center;">
+                                <span class="badge bg-warning rounded-5" th:text="${item.date}"></span></h6>
+                            <ul class="navbar-nav justify-content-end flex-grow-1 pe-5 ps-5">
+                                <!-------------------------Название-------------------------->
+                                <li class="nav-item">
+                                    <h2 class="pt-4 pb-4" style="margin-bottom: 0px;" th:text="${item.title}"></h2>
+                                </li>
+                                <!-------------------------Описание-------------------------->
+                                <li class="nav-item">
+                                    <div class="card text-bg-light w-100 mb-3 rounded-4">
+                                        <div class="card-body">
+                                            <p class="card-text"
+                                               th:text="${item.description}"></p>
+                                        </div>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="modal-footer p-0"
+                             style="border-bottom-left-radius: 16px; border-bottom-right-radius: 16px;">
+                            <div class="btn-group w-100 m-0" role="group">
+                                <button type="button" class="btn btn-outline-dark" data-bs-dismiss="modal"
+                                        style="border-bottom-left-radius: 12px; border-top-left-radius: 0px;
+                                                border-bottom-right-radius: 12px; border-top-right-radius: 0px;">Закрыть
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-------------------Конец модального окна------------------>
+        </tr>
+        </tbody>
+    </table>
+
+    <!------------------------------------------------------------------------------------>
+    <!--    Отображение новостей списком-->
+    <!------------------------------------------------------------------------------------>
+
+    <div th:if="${news.size() > 0}  and ${scheme} == 'list'" th:each="item : ${news}">
+        <div class="row featurette">
+            <div class="col-md-8 order-md-2">
+                <span class="badge rounded-pill text-bg-success" style="margin-bottom: 1em;"
+                      th:text="${item.date}"></span>
+                <span th:if="${item.meeting != null}"
+                        class="badge rounded-pill text-bg-info" style="margin-bottom: 1em;"
+                      th:text="'Дата мероприятия: ' + ${item.meeting.date}"></span>
+
+                <div class="row">
+                    <h2 class="featurette-heading fw-normal lh-1 col-md-9 col-lg-10" th:text="${item.title}"></h2>
+                </div>
+
+<!--                <p class="lead" th:text="${item.meetingDate}"></p>-->
+
+
+                <!----------    Действия для админа    ----------------------------------------------->
+                <div class="btn-group" role="group" aria-label="Buttons for Admin"
+                     sec:authorize="hasRole('ROLE_ADMIN')">
+                    <button class="btn btn-primary" type="button" data-bs-toggle="modal"
+                            th:data-bs-target="'#detailNewsModal' + ${item.id}">Подробнее
+                    </button>
+                    <a type="button" class="btn btn-primary"
+                       th:href="@{'/news/edit/' + ${item.id}}">Редактировать</a>
+
+                    <!-- Модальное окно удаление-->
+                    <div class="modal fade" th:id="'deleteListNewsModal' + ${item.id}" tabindex="-1"
+                         aria-labelledby="deleteMewsModalLabel"
+                         aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content rounded-4">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Удаление новости</h5>
+                                </div>
+                                <div class="modal-body">
+                                    <h5 class="modal-title">Вы уверены, что хотите удалить новость: <span
+                                            th:text="${item.title}"></span>?</h5>
+                                </div>
+                                <div class="modal-footer p-0"
+                                     style="border-bottom-left-radius: 16px; border-bottom-right-radius: 16px;">
+
+                                    <div class="btn-group w-100 m-0" role="group">
+                                        <button type="button" class="btn btn-outline-dark" data-bs-dismiss="modal"
+                                                style="border-bottom-left-radius: 12px; border-top-left-radius: 0px;">
+                                            Закрыть
+                                        </button>
+
+                                        <a type="button" th:href="@{'/news/delete/' + ${item.id}}"
+                                           class="btn btn-outline-danger"
+                                           style="border-bottom-right-radius: 12px; border-top-right-radius: 0px;">
+                                            Удалить
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Кнопка-триггер модального окна -->
+                    <button type="button" class="btn btn-danger" data-bs-toggle="modal"
+                            th:data-bs-target="'#deleteListNewsModal' + ${item.id}">Удалить
+                    </button>
+                </div>
+                <!----------    Действия для незарег.пользователя    ------------------------------------->
+                <button sec:authorize="!hasRole('ROLE_ADMIN')" class="btn btn-primary" type="button"
+                        data-bs-toggle="modal"
+                        th:data-bs-target="'#detailNewsModal' + ${item.id}">Подробнее
+                </button>
+            </div>
+
+            <div class="col-md-4 order-md-1">
+                <img class="bd-placeholder-img bd-placeholder-img-lg featurette-image img-fluid mx-auto rounded-4"
+                     width="500"
+                     height="500" th:src="|data:image/jpeg;base64,${item.pathPhoto}|" role="img"
+                     aria-label="Placeholder: 500x500"
+                     preserveAspectRatio="xMidYMid slice" style="object-fit: cover;" focusable="false"><title>
+                Placeholder</title>
+
+
+                </img>
+
+            </div>
+
+            <!-----------Модальное окно---------->
+            <div class="modal fade" th:id="'detailNewsModal' + ${item.id}" tabindex="-1"
+                 aria-labelledby="deleteModalLabel"
+                 aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
+                    <div class="modal-content rounded-4">
+
+                        <div class="modal-header">
+                            <!-------------------------Фото-------------------------->
+                            <div class="col-12 order-md-1">
+                                <a th:href="|data:image/jpeg;base64,${item.pathPhoto}|"
+                                   th:data-fancybox="'gallery' + ${item.id}">
+                                    <img th:src="|data:image/jpeg;base64,${item.pathPhoto}|" class="d-block w-100"
+                                         style="object-fit: cover;"
+                                         height="600px" alt="Фотография новости">
+                                </a>
+                            </div>
+                            <!--------------------------------------------------->
+                        </div>
+                        <div class="modal-body">
+                            <h6 style="position: absolute;left: 0;right: 0;text-align: center;">
+                                <span class="badge bg-warning rounded-5" th:text="${item.date}"></span>
+                                <span th:if="${item.meeting != null}"
+                                      class="badge rounded-pill text-bg-info" style="margin-bottom: 1em;"
+                                      th:text="'Дата мероприятия: ' + ${item.meeting.date}"></span></h6>
+                            <ul class="navbar-nav justify-content-end flex-grow-1 pe-5 ps-5">
+                                <!-------------------------Название-------------------------->
+                                <li class="nav-item">
+                                    <h2 class="pt-4 pb-4" style="margin-bottom: 0px;" th:text="${item.title}"></h2>
+                                </li>
+                                <!-------------------------Описание-------------------------->
+                                <li class="nav-item">
+                                    <div class="card text-bg-light w-100 mb-3 rounded-4">
+                                        <div class="card-body">
+                                            <p class="card-text"
+                                               th:text="${item.description}"></p>
+                                        </div>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="modal-footer p-0"
+                             style="border-bottom-left-radius: 16px; border-bottom-right-radius: 16px;">
+                            <div class="btn-group w-100 m-0" role="group">
+                                <button type="button" class="btn btn-outline-dark" data-bs-dismiss="modal"
+                                        style="border-bottom-left-radius: 12px; border-top-left-radius: 0px;
+                                                border-bottom-right-radius: 12px; border-top-right-radius: 0px;">Закрыть
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-------------------Конец модального окна------------------>
+
+        </div>
+        <hr class="featurette-divider">
+    </div>
+
+
+    <!------------------------------------------------------------------------------------>
+
+
+    <!--    <div><i>Отсортировано по [[${sortField}]] в [[${sortDir}]] порядке</i></div>-->
+    <div>&nbsp;</div>
+
+    <nav aria-label="Page navigation example" th:if="${totalPages > 1}">
+        Total Items: [[${totalItems}]]
+        &nbsp;&nbsp;&nbsp;-&nbsp;&nbsp;&nbsp;
+        <ul class="pagination justify-content-center">
+            <li class="page-item">
+                <a th:if="${currentPage > 1}"
+                   th:href="@{'/news/1' + '?sortField=' + ${sortField} + '&sortDir=' + ${sortDir} + '&scheme=' + ${scheme}}"
+                   class="page-link">Первая</a>
+                <span th:unless="${currentPage > 1}" class="page-link disabled">Первая</span>
+            </li>
+            <li class="page-item">
+                <a th:if="${currentPage > 1}"
+                   th:href="@{'/news/' + ${currentPage - 1} + '?sortField=' + ${sortField} + '&sortDir=' + ${sortDir} + '&scheme=' + ${scheme}}"
+                   class="page-link">Предыдущая</a>
+                <span th:unless="${currentPage > 1}" class="page-link disabled">Предыдущая</span>
+            </li>
+
+            <ul class="pagination" th:each="i: ${#numbers.sequence(1, totalPages)}">
+                <li class="page-item">
+                    <a th:if="${currentPage != i}"
+                       th:href="@{'/news/' + ${i} + '?sortField=' + ${sortField} + '&sortDir=' + ${sortDir} + '&scheme=' + ${scheme}}"
+                       class="page-link">[[${i}]]</a>
+                    <span th:unless="${currentPage != i}" class="page-link disabled">[[${i}]]</span>
+                </li>
+
+            </ul>
+
+            <li class="page-item">
+                <a th:if="${currentPage < totalPages}"
+                   th:href="@{'/news/' + ${currentPage + 1} + '?sortField=' + ${sortField} + '&sortDir=' + ${sortDir} + '&scheme=' + ${scheme}}"
+                   class="page-link">Следующая</a>
+                <span th:unless="${currentPage < totalPages}" class="page-link disabled">Следующая</span>
+            </li>
+            <li class="page-item">
+                <a th:if="${currentPage < totalPages}"
+                   th:href="@{'/news/' + ${totalPages} + '?sortField=' + ${sortField} + '&sortDir=' + ${sortDir} + '&scheme=' + ${scheme}}"
+                   class="page-link">Последняя</a>
+                <span th:unless="${currentPage < totalPages}" class="page-link disabled">Последняя</span>
+            </li>
+        </ul>
+    </nav>
+
+</div>
+
+<div th:replace="~{fragments/footer :: footer}"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.4.1/dist/jquery.min.js"></script>
+
+<script src="https://cdn.jsdelivr.net/gh/fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4"
+        crossorigin="anonymous"></script>
+</body>
+</html>

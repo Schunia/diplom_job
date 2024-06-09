@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity5">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-dark sticky-top bg-dark py-3 border-bottom" th:fragment="navigation">
+    <div class="container-xl">
+        <a th:href="@{/}" class="mb-md-0">
+            <img class="bi me-2" width="42" height="40" src="/assets/brand/logo.png">
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarsExample07XL"
+                aria-controls="navbarsExample07XL" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarsExample07XL">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item"><a th:href="@{/}" aria-current="page"
+                                        th:class="${activePage == 'home'} ? 'nav-link active' : 'nav-link'">Главная</a>
+                </li>
+                <li class="nav-item"><a th:href="@{/articles}"
+                                        th:class="${activePage == 'articles'} ? 'nav-link active' : 'nav-link'">Статьи</a>
+                </li>
+                <li class="nav-item"><a th:href="@{/news}"
+                                        th:class="${activePage == 'news'} ? 'nav-link active' : 'nav-link'">Новости</a>
+                </li>
+                <li class="nav-item"><a th:href="@{/observations}"
+                                        th:class="${activePage == 'observations'} ? 'nav-link active' : 'nav-link'">Наблюдения</a>
+                </li>
+                <li class="nav-item"><a th:href="@{/meetings}"
+                                        th:class="${activePage == 'meetings'} ? 'nav-link active' : 'nav-link'">Встречи</a>
+                </li>
+<!--                <li class="nav-item dropdown">-->
+<!--                    <a class="nav-link dropdown-toggle" th:class="${activePage == 'home'} ? 'nav-link active' : 'nav-link'" data-bs-toggle="dropdown" href="#" role="button" aria-expanded="false">Наблюдения</a>-->
+<!--                    <ul class="dropdown-menu">-->
+<!--                        <li><a class="dropdown-item" href="/observations">Спутники</a></li>-->
+<!--                        <li><a class="dropdown-item" href="#">Кометы</a></li>-->
+<!--                        <li><a class="dropdown-item" href="#">Метеориты</a></li>-->
+<!--                        <li><a class="dropdown-item" href="#">Метеоры</a></li>-->
+<!--                        <li><a class="dropdown-item" href="#">Планеты</a></li>-->
+<!--                        <li><a class="dropdown-item" href="#">Сияния</a></li>-->
+<!--                        <li><a class="dropdown-item" href="#">Звёзды</a></li>-->
+<!--                        <li><hr class="dropdown-divider"></li>-->
+<!--                        <li><a class="dropdown-item" href="#">Общего плана</a></li>-->
+<!--                    </ul>-->
+<!--                </li>-->
+                <li sec:authorize="hasRole('ROLE_ADMIN')" class="nav-item"><a th:href="@{/categories}"
+                                        th:class="${activePage == 'categories'} ? 'nav-link active' : 'nav-link'">Категории</a>
+                </li>
+<!--                <li class="nav-item"><a th:href="@{/places}"-->
+<!--                                        th:class="${activePage == 'places'} ? 'nav-link active' : 'nav-link'">Достопримечательности</a>-->
+<!--                </li>-->
+                <li class="nav-item"><a th:href="@{/gallery}"
+                                        th:class="${activePage == 'gallery'} ? 'nav-link active' : 'nav-link'">Галерея</a>
+                </li>
+            </ul>
+
+            <div class="col-md-3 text-end">
+                <div class="btn-group" sec:authorize="!isAuthenticated()">
+                    <a th:href="@{/log_in}" class="btn btn-outline-light me-2">Войти</a>
+                    <a th:href="@{/sign_up}" class="btn btn-warning">Зарегистрироваться</a>
+                </div>
+            </div>
+                <div class="dropdown text-end" sec:authorize="isAuthenticated()">
+                    <a href="#" class="d-block text-decoration-none dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                        <img src="/assets/brand/profile_icon.png" alt="mdo" width="32" height="32" class="rounded-circle">
+                        <span sec:authentication="principal.login"></span>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-dark text-small">
+                        <li><a class="dropdown-item" th:href="@{/profile}">Профиль</a></li>
+                        <li><a class="dropdown-item" th:href="@{/profile/elected}">Мои мероприятия</a></li>
+                        <li sec:authorize="hasRole('ROLE_ADMIN')">
+                            <a class="dropdown-item" href="/admin_cabinet/1?sortField=login&sortDir=asc">Администрирование</a></li>
+                        <li sec:authorize="hasRole('ROLE_ADMIN') || hasRole('ROLE_TEACHER')">
+                            <a class="dropdown-item" href="/lectures">Лекции</a></li>
+                        <li sec:authorize="hasRole('ROLE_TEACHER')">
+                            <a class="dropdown-item" href="/students_observations">Домашние задания</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><form th:action="@{/logout}" method="post">
+                                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                                <button class="dropdown-item" type="submit">Выйти</button>
+                            </form></li>
+                    </ul>
+                </div>
+
+        </div>
+    </div>
+</nav>
+</body>
+</html>
